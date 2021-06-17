@@ -130,6 +130,12 @@
    (:response query-prediction)))
 
 (reg-sub
+ :qb/query-prediction-queries
+ :<- [:qb/query-prediction]
+ (fn [query-prediction]
+   (:queries query-prediction)))
+
+(reg-sub
  :qb/query-prediction-text
  :<- [:qb/query-prediction]
  (fn [query-prediction]
@@ -152,3 +158,9 @@
  :<- [:qb/query-prediction]
  (fn [query-prediction]
    (:advanced? query-prediction)))
+
+(reg-sub
+ :qb/query-prediction-raw?
+ :<- [:qb/query-prediction]
+ (fn [query-prediction]
+   (:raw? query-prediction)))

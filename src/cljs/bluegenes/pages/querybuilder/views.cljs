@@ -816,10 +816,12 @@
         submit! #(when-not (string/blank? text)
                    (dispatch [:qb/run-query-prediction]))
         loading? @(subscribe [:qb/query-prediction-loading?])
-        response @(subscribe [:qb/query-prediction-response])]
+        raw? @(subscribe [:qb/query-prediction-raw?])
+        response @(subscribe [:qb/query-prediction-response])
+        queries @(subscribe [:qb/query-prediction-queries])]
     [:div
      [:p "Example: "
-      [:code "what is value, url, annotationversion, name from synonym, dataset, strain, probeset such that id lower than @value"]]
+      [:code "what is value, url, annotationversion, name from synonym, dataset, strain, probeset such that id lower than 1000"]]
      [:div.flex-row
       [:input.form-control
        {:type "text"
@@ -846,16 +848,20 @@
          [:input.form-control
           {:type "number"
            :value @(subscribe [:qb/query-prediction-candidates])
-           :on-change #(dispatch [:qb/set-query-prediction-candidates (oget % :target :value)])}]]])
+           :on-change #(dispatch [:qb/set-query-prediction-candidates (oget % :target :value)])}]]
+        [:label "Show raw output "
+         [:input
+          {:type "checkbox"
+           :checked raw?
+           :on-change #(dispatch [:qb/toggle-query-prediction-raw])}]]])
      (when (or loading? response)
        [:<>
         [:hr]
         (when loading? [mini-loader])
         (when response
-          #_[:pre (pr-str response)]
-          (if (seq? response)
-            [query-suggestions response]
-            [:pre (pr-str response)]))])]))
+          (if (and (seq queries) (not raw?))
+            [query-suggestions queries]
+            [:pre (.stringify js/JSON (clj->js response) nil 2)]))])]))
 
 (defn other-query-options []
   (let [tab-index (reagent/atom 0)]

@@ -744,11 +744,17 @@
  (fn [db [_]]
    (update-in db [:qb :query-prediction :advanced?] not)))
 
+(reg-event-db
+ :qb/toggle-query-prediction-raw
+ (fn [db [_]]
+   (update-in db [:qb :query-prediction :raw?] not)))
+
 (reg-event-fx
  :qb/run-query-prediction
  (fn [{db :db} [_]]
    (let [{:keys [text beam-size candidates]} (get-in db [:qb :query-prediction])]
      {:db (update-in db [:qb :query-prediction] assoc
+                     :queries nil
                      :response nil
                      :loading? true)
       ::fx/http {:uri "/api/predict/query"
@@ -780,7 +786,8 @@
    (let [model-classes (get-in db [:mines :flymine :service :model :classes])
          queries (map (partial build-query-from-prediction model-classes :Gene) res)]
      (update-in db [:qb :query-prediction] assoc
-                :response queries
+                :queries queries
+                :response res
                 :loading? false))))
 
 (reg-event-db
