@@ -791,7 +791,7 @@
 (reg-event-db
  :qb/query-prediction-success
  (fn [db [_ res]]
-   (let [model-classes (get-in db [:mines :flymine :service :model :classes])
+   (let [model-classes (get-in db [:mines (:current-mine db) :service :model :classes])
          queries (map (partial build-query-from-prediction model-classes :Gene) res)]
      (update-in db [:qb :query-prediction] assoc
                 :queries queries
