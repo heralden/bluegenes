@@ -658,6 +658,18 @@
 (defn truncate-path [path]
   (string/join "." (take-last 2 (string/split path #"\."))))
 
+(defn display-query [{:keys [from select where]} & {:keys [include-root?]}]
+  (-> [:<>
+       (when include-root?
+         [:code.start {:class (str "start-" from)} from])]
+      (into (for [path select]
+              [:code {:title path} (truncate-path path)]))
+      (into (for [{:keys [path op value type]} where]
+              [:code.constraint {:title path}
+               (if type
+                 (str (truncate-path path) " ISA " type)
+                 (str (truncate-path path) " " op " " value))]))))
+
 (defn recent-queries []
   (let [queries (take 5 @(subscribe [:results/historical-custom-queries]))
         active-query @(subscribe [:qb/im-query])]
@@ -671,15 +683,14 @@
          [:th "Last Run"]]]
        (into [:tbody]
              (for [[_ {:keys [value last-executed]}] queries
-                   :let [{:keys [from select]} value
+                   :let [{:keys [from]} value
                          active? (query= active-query (dissoc value :title))]]
                [:tr {:role "button"
                      :title (if active? "This query is active" "Load this query")
                      :class (when active? "active-query")
                      :on-click #(dispatch [:qb/load-query value])}
                 [:td [:code.start {:class (str "start-" from)} from]]
-                [:td (into [:<>] (for [path select]
-                                   [:code {:title path} (truncate-path path)]))]
+                [:td (display-query value)]
                 [:td [:span.date (.toLocaleTimeString (js/Date. last-executed))]]]))])))
 
 (defn saved-query [title _query]
@@ -715,8 +726,7 @@
          [:td.hidden-lg {:class (when-not @any-renaming* "hidden")}
           [:code {:title (string/join " " select)} "..."]]
          [:td {:class (when @any-renaming* "visible-lg-block")}
-          (into [:<>] (for [path select]
-                        [:code {:title path} (truncate-path path)]))]
+          (display-query query)]
          [:td
           (when-not @any-renaming*
             [:<>
@@ -803,13 +813,12 @@
 
 (defn query-suggestions [queries]
   (into [:ul.query-suggestions.query-table]
-        (for [{:keys [from select] :as query} queries]
+        (for [query queries]
           [:li.query
            {:on-click #(dispatch [:qb/load-query query])}
-           (into [:<>
-                  [:code.start {:class (str "start-" from)} from]]
-                 (for [path select]
-                   [:code {:title path} (truncate-path path)]))])))
+           (display-query query :include-root? true)])))
+
+(def example-nlp-query "what is value, url, annotationversion, name from synonym, dataset, strain, probeset such that id lower than 1000")
 
 (defn suggest-queries []
   (let [text @(subscribe [:qb/query-prediction-text])
@@ -820,8 +829,7 @@
         response @(subscribe [:qb/query-prediction-response])
         queries @(subscribe [:qb/query-prediction-queries])]
     [:div
-     [:p "Example: "
-      [:code "what is value, url, annotationversion, name from synonym, dataset, strain, probeset such that id lower than 1000"]]
+     [:p "Type a natural language query to generate predictions from."]
      [:div.flex-row
       [:input.form-control
        {:type "text"
@@ -829,6 +837,10 @@
         :autoFocus true
         :on-change #(dispatch [:qb/set-query-prediction-text (oget % :target :value)])
         :on-key-up #(when (= (oget % :keyCode) 13) (submit!))}]
+      [:button.btn.btn-default.btn-raised
+       {:type "button"
+        :on-click #(dispatch [:qb/set-query-prediction-text example-nlp-query])}
+       "Example"]
       [:button.btn.btn-default.btn-raised
        {:type "button"
         :on-click #(dispatch [:qb/toggle-query-prediction-advanced])}

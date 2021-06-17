@@ -776,9 +776,17 @@
   (let [views (keep (fn [[class attribute]]
                       (when-let [name (:name (find-class-ref-by-referencedType model-classes root-class class))]
                         (str name "." attribute)))
-                    (map vector (:classes prediction) (:attributes prediction)))]
+                    (map vector (:classes prediction) (:attributes prediction)))
+        consts (keep (fn [constraint]
+                       (let [[attribute class op value] (str/split constraint #"\s")]
+                         (when-let [name (:name (find-class-ref-by-referencedType model-classes root-class class))]
+                           {:path (str name "." attribute)
+                            :op op
+                            :value value})))
+                     (:constraints prediction))]
     {:from (name root-class)
-     :select (vec views)}))
+     :select (vec views)
+     :where (vec consts)}))
 
 (reg-event-db
  :qb/query-prediction-success
