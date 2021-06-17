@@ -41,4 +41,6 @@
         :preview nil
         :im-query nil
         :enhance-query {}
-        :root-class nil}})
+        :root-class nil
+        :query-prediction {:beam-size 200
+                           :candidates 3}}})

@@ -815,10 +815,26 @@
         :autoFocus true
         :on-change #(dispatch [:qb/set-query-prediction-text (oget % :target :value)])
         :on-key-up #(when (= (oget % :keyCode) 13) (submit!))}]
-      [:button.btn.btn-raised
+      [:button.btn.btn-default.btn-raised
+       {:type "button"
+        :on-click #(dispatch [:qb/toggle-query-prediction-advanced])}
+       "Advanced"]
+      [:button.btn.btn-primary.btn-raised
        {:type "button"
         :on-click submit!}
        "Run prediction"]]
+     (when @(subscribe [:qb/query-prediction-advanced?])
+       [:div
+        [:label "Beam size: "
+         [:input.form-control
+          {:type "number"
+           :value @(subscribe [:qb/query-prediction-beam-size])
+           :on-change #(dispatch [:qb/set-query-prediction-beam-size (oget % :target :value)])}]]
+        [:label "Candidates: "
+         [:input.form-control
+          {:type "number"
+           :value @(subscribe [:qb/query-prediction-candidates])
+           :on-change #(dispatch [:qb/set-query-prediction-candidates (oget % :target :value)])}]]])
      (when @(subscribe [:qb/query-prediction-loading?])
        [mini-loader])
      (when-let [res @(subscribe [:qb/query-prediction-response])]

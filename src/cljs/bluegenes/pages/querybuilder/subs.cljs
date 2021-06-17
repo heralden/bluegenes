@@ -134,3 +134,21 @@
  :<- [:qb/query-prediction]
  (fn [query-prediction]
    (:text query-prediction)))
+
+(reg-sub
+ :qb/query-prediction-beam-size
+ :<- [:qb/query-prediction]
+ (fn [query-prediction]
+   (:beam-size query-prediction)))
+
+(reg-sub
+ :qb/query-prediction-candidates
+ :<- [:qb/query-prediction]
+ (fn [query-prediction]
+   (:candidates query-prediction)))
+
+(reg-sub
+ :qb/query-prediction-advanced?
+ :<- [:qb/query-prediction]
+ (fn [query-prediction]
+   (:advanced? query-prediction)))

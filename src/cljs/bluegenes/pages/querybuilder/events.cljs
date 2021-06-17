@@ -729,6 +729,21 @@
  (fn [db [_ text]]
    (assoc-in db [:qb :query-prediction :text] text)))
 
+(reg-event-db
+ :qb/set-query-prediction-beam-size
+ (fn [db [_ number]]
+   (assoc-in db [:qb :query-prediction :beam-size] number)))
+
+(reg-event-db
+ :qb/set-query-prediction-candidates
+ (fn [db [_ number]]
+   (assoc-in db [:qb :query-prediction :candidates] number)))
+
+(reg-event-db
+ :qb/toggle-query-prediction-advanced
+ (fn [db [_]]
+   (update-in db [:qb :query-prediction :advanced?] not)))
+
 (reg-event-fx
  :qb/run-query-prediction
  (fn [{db :db} [_]]
