@@ -116,3 +116,21 @@
  :qb/query-prediction
  (fn [db]
    (get-in db [:qb :query-prediction])))
+
+(reg-sub
+ :qb/query-prediction-loading?
+ :<- [:qb/query-prediction]
+ (fn [query-prediction]
+   (:loading? query-prediction)))
+
+(reg-sub
+ :qb/query-prediction-response
+ :<- [:qb/query-prediction]
+ (fn [query-prediction]
+   (:response query-prediction)))
+
+(reg-sub
+ :qb/query-prediction-text
+ :<- [:qb/query-prediction]
+ (fn [query-prediction]
+   (:text query-prediction)))

@@ -802,26 +802,27 @@
 (defn create-template [])
 
 (defn suggest-queries []
-  (let [input (reagent/atom "")
-        submit! #(when-not (string/blank? @input)
-                   (dispatch [:qb/run-query-prediction @input]))]
-    (fn []
-      [:div
-       [:p "Example: "
-        [:code "what is value, url, annotationversion, name from synonym, dataset, strain, probeset such that id lower than @value"]]
-       [:div.flex-row
-        [:input.form-control
-         {:type "text"
-          :value @input
-          :autoFocus true
-          :on-change #(reset! input (oget % :target :value))
-          :on-key-up #(when (= (oget % :keyCode) 13) (submit!))}]
-        [:button.btn.btn-raised
-         {:type "button"
-          :on-click submit!}
-         "Run prediction"]]
-       (when-let [res @(subscribe [:qb/query-prediction])]
-         [:pre (pr-str res)])])))
+  (let [text @(subscribe [:qb/query-prediction-text])
+        submit! #(when-not (string/blank? text)
+                   (dispatch [:qb/run-query-prediction]))]
+    [:div
+     [:p "Example: "
+      [:code "what is value, url, annotationversion, name from synonym, dataset, strain, probeset such that id lower than @value"]]
+     [:div.flex-row
+      [:input.form-control
+       {:type "text"
+        :value text
+        :autoFocus true
+        :on-change #(dispatch [:qb/set-query-prediction-text (oget % :target :value)])
+        :on-key-up #(when (= (oget % :keyCode) 13) (submit!))}]
+      [:button.btn.btn-raised
+       {:type "button"
+        :on-click submit!}
+       "Run prediction"]]
+     (when @(subscribe [:qb/query-prediction-loading?])
+       [mini-loader])
+     (when-let [res @(subscribe [:qb/query-prediction-response])]
+       [:pre (pr-str res)])]))
 
 (defn other-query-options []
   (let [tab-index (reagent/atom 0)]

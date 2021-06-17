@@ -724,23 +724,36 @@
  (fn [db [_]]
    (update db :qb dissoc :import-result)))
 
+(reg-event-db
+ :qb/set-query-prediction-text
+ (fn [db [_ text]]
+   (assoc-in db [:qb :query-prediction :text] text)))
+
 (reg-event-fx
  :qb/run-query-prediction
- (fn [{db :db} [_ text]]
-   {::fx/http {:uri "/api/predict/query"
-               :method :get
-               :query-params {:query text
-                              :beam_size 200
-                              :candidates 3}
-               :on-success [:qb/query-prediction-success]
-               :on-failure [:qb/query-prediction-failure]}}))
+ (fn [{db :db} [_]]
+   (let [text (get-in db [:qb :query-prediction :text])]
+     {:db (update-in db [:qb :query-prediction] assoc
+                     :response nil
+                     :loading? true)
+      ::fx/http {:uri "/api/predict/query"
+                 :method :get
+                 :query-params {:query text
+                                :beam_size 200
+                                :candidates 3}
+                 :on-success [:qb/query-prediction-success]
+                 :on-failure [:qb/query-prediction-failure]}})))
 
 (reg-event-db
  :qb/query-prediction-success
  (fn [db [_ res]]
-   (assoc-in db [:qb :query-prediction] res)))
+   (update-in db [:qb :query-prediction] assoc
+              :response res
+              :loading? false)))
 
 (reg-event-db
  :qb/query-prediction-failure
  (fn [db [_ res]]
-   (assoc-in db [:qb :query-prediction] res)))
+   (update-in db [:qb :query-prediction] assoc
+              :response res
+              :loading? false)))
