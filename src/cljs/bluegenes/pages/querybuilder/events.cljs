@@ -747,15 +747,15 @@
 (reg-event-fx
  :qb/run-query-prediction
  (fn [{db :db} [_]]
-   (let [text (get-in db [:qb :query-prediction :text])]
+   (let [{:keys [text beam-size candidates]} (get-in db [:qb :query-prediction])]
      {:db (update-in db [:qb :query-prediction] assoc
                      :response nil
                      :loading? true)
       ::fx/http {:uri "/api/predict/query"
                  :method :get
                  :query-params {:query text
-                                :beam_size 200
-                                :candidates 3}
+                                :beam_size beam-size
+                                :candidates candidates}
                  :on-success [:qb/query-prediction-success]
                  :on-failure [:qb/query-prediction-failure]}})))
 
