@@ -727,7 +727,7 @@
 (reg-event-fx
  :qb/run-query-prediction
  (fn [{db :db} [_ text]]
-   {::fx/http {:uri "http://polyglotter.apps.intermine.org/predict_query"
+   {::fx/http {:uri "/api/predict/query"
                :method :get
                :query-params {:query text
                               :beam_size 200

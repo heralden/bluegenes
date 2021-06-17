@@ -6,6 +6,7 @@
             [bluegenes.ws.auth :as auth]
             [bluegenes.ws.ids :as ids]
             [bluegenes.ws.rss :as rss]
+            [bluegenes.ws.predict :as predict]
             [bluegenes.ws.lookup :as lookup]
             [bluegenes.index :refer [index]]
             [config.core :refer [env]]
@@ -54,7 +55,8 @@
     (context "/api" []
       (context "/auth" [] auth/routes)
       (context "/ids" [] ids/routes)
-      (context "/rss" [] rss/routes))
+      (context "/rss" [] rss/routes)
+      (context "/predict" [] predict/routes))
 
     ;; Dynamic routes for handling permanent URL resolution on configured mines.
     (apply compojure/routes
