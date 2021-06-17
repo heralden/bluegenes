@@ -801,6 +801,28 @@
 
 (defn create-template [])
 
+(defn suggest-queries []
+  (let [input (reagent/atom "")
+        submit! #(when-not (string/blank? @input)
+                   (dispatch [:qb/run-query-prediction @input]))]
+    (fn []
+      [:div
+       [:p "Example: "
+        [:code "what is value, url, annotationversion, name from synonym, dataset, strain, probeset such that id lower than @value"]]
+       [:div.flex-row
+        [:input.form-control
+         {:type "text"
+          :value @input
+          :autoFocus true
+          :on-change #(reset! input (oget % :target :value))
+          :on-key-up #(when (= (oget % :keyCode) 13) (submit!))}]
+        [:button.btn.btn-raised
+         {:type "button"
+          :on-click submit!}
+         "Run prediction"]]
+       (when-let [res @(subscribe [:qb/query-prediction])]
+         [:pre (pr-str res)])])))
+
 (defn other-query-options []
   (let [tab-index (reagent/atom 0)]
     (fn []
@@ -809,7 +831,8 @@
         (into [:ul.nav.nav-tabs]
               (let [tabs ["Recent Queries"
                           "Saved Queries"
-                          "Import from XML"]]
+                          "Import from XML"
+                          "Suggest Queries"]]
                           ; "Create Template"]]
                 (for [[i title] (map-indexed vector tabs)]
                   [:li {:class (when (= @tab-index i) "active")}
@@ -821,7 +844,8 @@
         (case @tab-index
           0 [recent-queries]
           1 [saved-queries]
-          2 [import-from-xml])]])))
+          2 [import-from-xml]
+          3 [suggest-queries])]])))
           ; 3 [create-template])]])))
 
 (defn main []

@@ -13,7 +13,8 @@
             [bluegenes.utils :refer [read-xml-query dissoc-in]]
             [oops.core :refer [oget]]
             [clojure.walk :refer [postwalk]]
-            [bluegenes.components.ui.constraint :as constraint]))
+            [bluegenes.components.ui.constraint :as constraint]
+            [bluegenes.effects :as fx]))
 
 (reg-event-fx
  ::load-querybuilder
@@ -722,3 +723,24 @@
  :qb/clear-import-result
  (fn [db [_]]
    (update db :qb dissoc :import-result)))
+
+(reg-event-fx
+ :qb/run-query-prediction
+ (fn [{db :db} [_ text]]
+   {::fx/http {:uri "http://polyglotter.apps.intermine.org/predict_query"
+               :method :get
+               :query-params {:query text
+                              :beam_size 200
+                              :candidates 3}
+               :on-success [:qb/query-prediction-success]
+               :on-failure [:qb/query-prediction-failure]}}))
+
+(reg-event-db
+ :qb/query-prediction-success
+ (fn [db [_ res]]
+   (assoc-in db [:qb :query-prediction] res)))
+
+(reg-event-db
+ :qb/query-prediction-failure
+ (fn [db [_ res]]
+   (assoc-in db [:qb :query-prediction] res)))
