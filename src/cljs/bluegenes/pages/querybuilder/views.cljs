@@ -801,6 +801,16 @@
 
 (defn create-template [])
 
+(defn query-suggestions [queries]
+  (into [:ul.query-suggestions.query-table]
+        (for [{:keys [from select] :as query} queries]
+          [:li.query
+           {:on-click #(dispatch [:qb/load-query query])}
+           (into [:<>
+                  [:code.start {:class (str "start-" from)} from]]
+                 (for [path select]
+                   [:code {:title path} (truncate-path path)]))])))
+
 (defn suggest-queries []
   (let [text @(subscribe [:qb/query-prediction-text])
         submit! #(when-not (string/blank? text)
@@ -841,7 +851,11 @@
        [:<>
         [:hr]
         (when loading? [mini-loader])
-        (when response [:pre (pr-str response)])])]))
+        (when response
+          #_[:pre (pr-str response)]
+          (if (seq? response)
+            [query-suggestions response]
+            [:pre (pr-str response)]))])]))
 
 (defn other-query-options []
   (let [tab-index (reagent/atom 0)]

@@ -936,3 +936,20 @@ div.column-container {
 .constraint-operator.input-group-btn button.btn {
     text-transform: none;
 }
+
+.query-suggestions {
+    list-style: none;
+    padding-left: 0;
+
+    .query {
+        padding: @spacer;
+        border: 1px solid @querybuilder-soft-color;
+        border-radius: 5px;
+        margin-top: @spacer;
+
+        &:hover {
+            background-color: @body-background-color;
+            cursor: pointer;
+        }
+    }
+}

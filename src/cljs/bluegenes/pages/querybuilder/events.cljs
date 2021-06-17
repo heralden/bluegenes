@@ -759,12 +759,29 @@
                  :on-success [:qb/query-prediction-success]
                  :on-failure [:qb/query-prediction-failure]}})))
 
+(defn find-class-ref-by-referencedType [model-classes class-kw referencedType]
+  (let [refs (->> (get model-classes class-kw)
+                  ((juxt (comp vals :references) (comp vals :collections)))
+                  (apply concat)
+                  (group-by :referencedType))]
+    (get-in refs [referencedType 0])))
+
+(defn build-query-from-prediction [model-classes root-class {:keys [prediction]}]
+  (let [views (keep (fn [[class attribute]]
+                      (when-let [name (:name (find-class-ref-by-referencedType model-classes root-class class))]
+                        (str name "." attribute)))
+                    (map vector (:classes prediction) (:attributes prediction)))]
+    {:from (name root-class)
+     :select (vec views)}))
+
 (reg-event-db
  :qb/query-prediction-success
  (fn [db [_ res]]
-   (update-in db [:qb :query-prediction] assoc
-              :response res
-              :loading? false)))
+   (let [model-classes (get-in db [:mines :flymine :service :model :classes])
+         queries (map (partial build-query-from-prediction model-classes :Gene) res)]
+     (update-in db [:qb :query-prediction] assoc
+                :response queries
+                :loading? false))))
 
 (reg-event-db
  :qb/query-prediction-failure
