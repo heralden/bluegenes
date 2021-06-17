@@ -804,7 +804,9 @@
 (defn suggest-queries []
   (let [text @(subscribe [:qb/query-prediction-text])
         submit! #(when-not (string/blank? text)
-                   (dispatch [:qb/run-query-prediction]))]
+                   (dispatch [:qb/run-query-prediction]))
+        loading? @(subscribe [:qb/query-prediction-loading?])
+        response @(subscribe [:qb/query-prediction-response])]
     [:div
      [:p "Example: "
       [:code "what is value, url, annotationversion, name from synonym, dataset, strain, probeset such that id lower than @value"]]
@@ -835,10 +837,11 @@
           {:type "number"
            :value @(subscribe [:qb/query-prediction-candidates])
            :on-change #(dispatch [:qb/set-query-prediction-candidates (oget % :target :value)])}]]])
-     (when @(subscribe [:qb/query-prediction-loading?])
-       [mini-loader])
-     (when-let [res @(subscribe [:qb/query-prediction-response])]
-       [:pre (pr-str res)])]))
+     (when (or loading? response)
+       [:<>
+        [:hr]
+        (when loading? [mini-loader])
+        (when response [:pre (pr-str response)])])]))
 
 (defn other-query-options []
   (let [tab-index (reagent/atom 0)]
