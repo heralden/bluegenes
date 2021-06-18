@@ -774,15 +774,18 @@
 
 (defn build-query-from-prediction [model-classes root-class {:keys [prediction]}]
   (let [views (keep (fn [[class attribute]]
-                      (when-let [name (:name (find-class-ref-by-referencedType model-classes root-class class))]
-                        (str name "." attribute)))
+                      (if (= (name root-class) class)
+                        attribute
+                        (when-let [nom (:name (find-class-ref-by-referencedType model-classes root-class class))]
+                          (str nom "." attribute))))
                     (map vector (:classes prediction) (:attributes prediction)))
         consts (keep (fn [constraint]
-                       (let [[attribute class op value] (str/split constraint #"\s")]
-                         (when-let [name (:name (find-class-ref-by-referencedType model-classes root-class class))]
-                           {:path (str name "." attribute)
-                            :op op
-                            :value value})))
+                       (let [[attribute class op value] (str/split constraint #"\s")
+                             const {:op op :value value}]
+                         (if (= (name root-class) class)
+                           (assoc const :path attribute)
+                           (when-let [nom (:name (find-class-ref-by-referencedType model-classes root-class class))]
+                             (assoc const :path (str nom "." attribute))))))
                      (:constraints prediction))]
     {:from (name root-class)
      :select (vec views)
