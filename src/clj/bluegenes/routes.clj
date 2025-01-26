@@ -55,7 +55,8 @@
 ; Define the top level URL routes for the server
 (def routes
   (compojure/let-routes [mines (env->mines env)
-                         favicon* (delay (get-favicon))]
+                         ;; Hardcoded to model/images as this slows down dx
+                         #_(favicon* (delay (get-favicon)))]
     (context (:bluegenes-deploy-path env) []
       ;;serve compiled files, i.e. js, css, from the resources folder
       (resources "/")
@@ -65,7 +66,7 @@
       ;; 2. `/<mine>/model/images/favicon.ico` being present on the default mine.
       ;; 3. `public/favicon-fallback.ico` which is always present.
       ;; Hence it follows that the following route won't be matched if [1] is true.
-      (GET "/favicon.ico" [] @favicon*)
+      (GET "/favicon.ico" [] (found (str (get-service-root env) "/model/images/favicon.ico")))
 
       (GET "/version" [] (response {:version "0.1.0"}))
 
